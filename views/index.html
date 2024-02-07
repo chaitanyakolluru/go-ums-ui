@@ -1,0 +1,62 @@
+{{ block "index" . }}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://unpkg.com/htmx.org/dist/htmx.min.js"></script>
+  </head>
+  <body>
+    {{ template "form" .Form }}
+    <hr>
+    {{ template "display" .Data }}
+
+  <script>
+    document.addEventListener("DOMContentLoaded", (event) => {
+      document.body.addEventListener("htmx:beforeSwap", function(evt) {
+        if (evt.detail.xhr.status == 422) {
+          evt.detail.shouldSwap = true;
+          evt.Detail.isError = false;
+        }
+      });
+    });
+  </script>
+  </body>
+  
+</html>
+{{ end }}
+
+
+{{ block "form" . }}
+<form hx-swap="outerHTML" id="form" hx-post="/users">
+  name: <input
+  {{ if .Values.name }} value="{{ .Values.name }}" {{ end }}
+  type="text" name="name" placeholder="Name">
+  email: <input 
+  {{ if .Values.email }} value="{{ .Values.email }}" {{ end }}
+  type="text" name="email" placeholder="Email">
+
+  {{ if .Errors.email }}
+    <div style="red" class="error">{{ .Errors.email }}</div>
+  {{ end }}
+
+  <button type="submit">Create User</button>
+</form>
+{{ end }}
+
+{{ block "display" . }}
+<div id="contacts" style="display: flex; flex-direction: column">
+  {{ range .Users }}
+  <div style="display: flex" id="contact-{{ .Name }}">
+    <div class="info-container">
+      <div class="info-item">
+        <span class="info-label">Name:</span> {{ .Name }}
+        <span class="info-label">Email:</span> {{ .Email }}
+      </div>
+    </div>
+  </div>
+  {{ end }}
+</div>
+{{ end }}
+
