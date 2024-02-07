@@ -14,6 +14,11 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+type Response struct {
+	ID      int    `json:"id"`
+	Message string `json:"message"`
+}
+
 type Data struct {
 	Users []model.UserData
 }
@@ -43,7 +48,7 @@ func NewPage() Page {
 	ctx := context.Background()
 	result := []model.UserData{}
 	err := requests.
-		URL(fmt.Sprintf("http://localhost:8080/users")).
+		URL("http://localhost:8080/users").
 		CheckStatus(http.StatusOK).
 		ToJSON(&result).
 		Fetch(ctx)
@@ -96,11 +101,13 @@ func main() {
 			Email: email,
 		}
 
+		response := Response{}
 		err := requests.
-			URL(fmt.Sprintf("http://localhost:8080/users")).
+			URL("http://localhost:8080/users").
 			Accept("application/json").
 			BodyJSON(&user).
 			CheckStatus(http.StatusCreated).
+			ToJSON(&response).
 			Fetch(ctx)
 
 		if err != nil {
@@ -112,7 +119,15 @@ func main() {
 			return c.Render(422, "form", formData)
 		}
 
-		return c.Redirect(http.StatusFound, "/")
+		userAdded := model.UserData{}
+		err = requests.
+			URL(fmt.Sprintf("http://localhost:8080/users/%d", response.ID)).
+			CheckStatus(http.StatusOK).
+			ToJSON(&userAdded).
+			Fetch(ctx)
+
+		c.Render(200, "form", NewForm())
+		return c.Render(200, "oob-user", userAdded)
 	})
 
 	e.Logger.Fatal(e.Start(":1323"))

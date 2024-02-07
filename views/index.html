@@ -48,6 +48,13 @@
 {{ block "display" . }}
 <div id="contacts" style="display: flex; flex-direction: column">
   {{ range .Users }}
+  {{ template "user" . }}
+  {{ end }}
+</div>
+{{ end }}
+
+
+{{ block "user" . }}
   <div style="display: flex" id="contact-{{ .Name }}">
     <div class="info-container">
       <div class="info-item">
@@ -56,7 +63,10 @@
       </div>
     </div>
   </div>
-  {{ end }}
-</div>
 {{ end }}
 
+{{ block "oob-user" . }}
+  <div id="users" hx-swap-oob="afterbegin">
+    {{ template "user" . }}
+  </div>
+{{ end }}
