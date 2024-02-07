@@ -40,7 +40,7 @@ func NewForm() Form {
 }
 
 func NewPage() Page {
-	var ctx = context.Background()
+	ctx := context.Background()
 	result := []model.UserData{}
 	err := requests.
 		URL(fmt.Sprintf("http://localhost:8080/users")).
@@ -83,6 +83,36 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		page := NewPage()
 		return c.Render(http.StatusOK, "index", page)
+	})
+
+	e.POST("/users", func(c echo.Context) error {
+		name := c.FormValue("name")
+		email := c.FormValue("email")
+
+		ctx := context.Background()
+
+		user := model.User{
+			Name:  name,
+			Email: email,
+		}
+
+		err := requests.
+			URL(fmt.Sprintf("http://localhost:8080/users")).
+			Accept("application/json").
+			BodyJSON(&user).
+			CheckStatus(http.StatusCreated).
+			Fetch(ctx)
+
+		if err != nil {
+			formData := NewForm()
+			formData.Values["name"] = name
+			formData.Values["email"] = email
+			formData.Errors["name"] = err.Error()
+
+			return c.Render(422, "form", formData)
+		}
+
+		return c.Redirect(http.StatusFound, "/")
 	})
 
 	e.Logger.Fatal(e.Start(":1323"))
